@@ -3,46 +3,57 @@ import { FiX } from "react-icons/fi";
 import { useState } from "react";
 
 const ContactForm = ({ isOpen, onClose }) => {
-
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
+  const [statusType, setStatusType] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showCheckmark, setShowCheckmark] = useState(false);
 
   const handleSendEmail = async (e) => {
-  e.preventDefault(); // Prevent default form submission
+    e.preventDefault();
 
-  // Basic validation
-  if (!name || !email || !message) {
-    alert("Please fill all fields");
-    return;
-  }
-
-  try {
-    const response = await fetch("http://localhost:5000/send-email", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name, email, message }),
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      alert("Message sent successfully!");
-      setName("");
-      setEmail("");
-      setMessage("");
-      onClose(); // close modal after sending
-    } else {
-      alert(data.error || "Something went wrong");
+    if (!name || !email || !message) {
+      setStatusType("error");
+      setStatusMessage("Please fill all fields");
+      return;
     }
-  } catch (error) {
-    console.error(error);
-    alert("Failed to send message. Try again later.");
-  }
-};
 
+    setLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:5000/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, message }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setStatusType("success");
+        setStatusMessage("");
+        setShowCheckmark(true);
+        setName("");
+        setEmail("");
+        setMessage("");
+        setTimeout(() => {
+          setShowCheckmark(false);
+          onClose();
+        }, 2000);
+      } else {
+        setStatusType("error");
+        setStatusMessage(data.error || "Something went wrong");
+      }
+    } catch (err) {
+      console.error(err);
+      setStatusType("error");
+      setStatusMessage("Failed to send message. Try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -58,86 +69,106 @@ const ContactForm = ({ isOpen, onClose }) => {
             initial={{ opacity: 0, scale: 0.8, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 30 }}
-            transition={{
-              type: "spring",
-              stiffness: 200,
-              damping: 30,
-              duration: 0.8,
-            }}
-            className="w-full max-w-md p-6 bg-gray-600 shadow-xl dark:bg-gray-800 rounded-xl"
+            transition={{ type: "spring", stiffness: 200, damping: 30, duration: 0.8 }}
+            className="relative w-full max-w-md p-6 bg-gray-600 shadow-xl dark:bg-gray-800 rounded-xl"
           >
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-bold text-gray-600">
-                GET IN TOUCH
-              </h1>
+              <h1 className="text-2xl font-bold text-gray-300">GET IN TOUCH</h1>
               <button onClick={onClose}>
                 <FiX className="w-5 h-5 font-extrabold text-gray-300" />
               </button>
             </div>
 
-            {/* INPUT FORM */}
-            <form className="space-y-4">
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block mb-1 text-sm font-medium text-gray-300"
+            {/* Checkmark Animation */}
+            {showCheckmark && (
+              <div className="flex justify-center mb-4">
+                <motion.svg
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 20 }}
+                  className="w-12 h-12 text-green-400"
+                  viewBox="0 0 52 52"
                 >
-                  Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  placeholder="Your Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                />
+                  <motion.circle
+                    cx="26"
+                    cy="26"
+                    r="25"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+                  <motion.path
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M14 27 l7 7 l17 -17"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.8, ease: "easeInOut" }}
+                  />
+                </motion.svg>
               </div>
+            )}
 
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block mb-1 text-sm font-medium text-gray-300"
+            {!showCheckmark && (
+              <form className="space-y-4" onSubmit={handleSendEmail}>
+                <div>
+                  <label htmlFor="name" className="block mb-1 text-sm font-medium text-gray-300">Name</label>
+                  <input
+                    type="text"
+                    id="name"
+                    placeholder="Your Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="email" className="block mb-1 text-sm font-medium text-gray-300">Email</label>
+                  <input
+                    type="email"
+                    id="email"
+                    placeholder="Your Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="message" className="block mb-1 text-sm font-medium text-gray-300">Message</label>
+                  <textarea
+                    rows="5"
+                    id="message"
+                    placeholder="How can I help you?"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                  />
+                </div>
+
+                {statusMessage && (
+                  <p className={`text-sm font-medium ${statusType === "success" ? "text-green-400" : "text-red-400"}`}>
+                    {statusMessage}
+                  </p>
+                )}
+
+                <motion.button
+                  type="submit"
+                  disabled={loading}
+                  whileTap={{ scale: 0.97 }}
+                  whileHover={{ scale: 1.03 }}
+                  className={`w-full px-4 py-2 transition-all duration-300 rounded-lg shadow-md bg-gradient-to-r from-red-800 to-red-400 hover:from-red-700 hover:to-red-700 hover:shadow-lg hover:shadow-red-600/50 ${
+                    loading ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
                 >
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  placeholder="Your Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="message"
-                  className="block mb-1 text-sm font-medium text-gray-300"
-                >
-                  Message
-                </label>
-                <textarea
-                  rows="5"
-                  id="message"
-                  placeholder="How can I Help You?"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                />
-              </div>
-
-              <motion.button
-                type="submit"
-                onClick={handleSendEmail}
-                whileTap={{ scale: 0.97 }}
-                whileHover={{ scale: 1.03 }}
-                className="w-full px-4 py-2 transition-all duration-300 rounded-lg shadow-md bg-gradient-to-r from-red-800 to-red-400 hover:from-red-700 hover:to-red-700 hover:shadow-lg hover:shadow-red-600/50"
-              >
-                Send Message
-              </motion.button>
-            </form>
+                  {loading ? "Sending..." : "Send Message"}
+                </motion.button>
+              </form>
+            )}
           </motion.div>
         </motion.div>
       )}
