@@ -15,7 +15,6 @@ const ContactForm = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [showCheckmark, setShowCheckmark] = useState(false);
   
-  console.log("Backend URL:", backendUrl);
 
   const handleSendEmail = async (e) => {
     e.preventDefault();
