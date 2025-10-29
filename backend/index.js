@@ -1,4 +1,3 @@
-// index.js
 import express from "express";
 import nodemailer from "nodemailer";
 import cors from "cors";

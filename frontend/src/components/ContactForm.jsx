@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FiX } from "react-icons/fi";
 import { useState } from "react";
 
+
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 
@@ -13,6 +14,7 @@ const ContactForm = ({ isOpen, onClose }) => {
   const [statusType, setStatusType] = useState("");
   const [loading, setLoading] = useState(false);
   const [showCheckmark, setShowCheckmark] = useState(false);
+  
   console.log("Backend URL:", backendUrl);
 
   const handleSendEmail = async (e) => {
