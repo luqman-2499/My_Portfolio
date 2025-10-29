@@ -2,6 +2,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FiX } from "react-icons/fi";
 import { useState } from "react";
 
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
+
 const ContactForm = ({ isOpen, onClose }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -23,7 +26,7 @@ const ContactForm = ({ isOpen, onClose }) => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/send-email", {
+      const response = await fetch(`${backendUrl}/send-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, message }),
